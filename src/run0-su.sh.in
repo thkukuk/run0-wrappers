@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# This script acts as a basic su wrapper using run0.
+# It handles the common case of switching to root to run a command.
+
+RUN0_EXEC="run0"
+RUN0_BACKGROUND="--background="
+
+# --- Function to display usage information ---
+
+show_help() {
+    cat << 'EOF'
+run0-su - run a command with substittue user and group ID via run0
+
+Usage: run0-su [options] [-] [user [argument...]]"
+
+Options:
+  -c, --command <command>       Pass command to the shell with the -c option
+  -f, --fast                    Pass -f to the shell
+  -h, --help                    Display help text and exit
+  -V, --version                 Display version and exit
+EOF
+}
+
+show_version() {
+    run0_version="$(run0 --version 2>/dev/null | head -n 1 | cut -d' ' -f3 | sed 's/[()]//g')"
+    echo "run0-su (@PACKAGE@) @VERSION@"
+    echo "systemd run0 version $run0_version"
+}
+
+# --- Get shell for the target user or current user ---
+get_shell() {
+    local targetuser=$1
+
+    if [ -n "$SHELL" ]; then
+        echo "$SHELL"
+    else
+	# otherwise, get the shell of the target user
+	local shell
+	shell=$(getent passwd "$targetuser" 2>/dev/null | cut -d: -f7)
+	echo "$shell"
+    fi
+}
+
+
+# --- Main Logic ---
+
+# Array to hold the final command and arguments for run0
+RUN0_ARGS=()
+
+# Variables to track user and command
+RUN0_SHELL=""
+TARGET_USER=""
+TARGET_GROUP=""
+TARGET_CWD="--chdir=$PWD"
+LOGIN_SHELL=0
+
+while (( "$#" )); do
+    arg="$1"
+
+    case "$arg" in
+	-f|--fast)
+	    RUN0_ARGS+=("-f")
+            shift
+            ;;
+        -|-l|--login)
+	    RUN0_ARGS+=("-l")
+	    # --login should switch to the home directory
+	    TARGET_CWD="--chdir=~"
+            shift
+	    LOGIN_SHELL=1
+            ;;
+        -m|-p|--preserve-environment)
+            echo "Warning: Parameter '$arg' (preserve environment) is ignored in this run0 wrapper." >&2
+            shift
+            ;;
+	-g|--group)
+	    shift
+	    TARGET_GROUP="--group=$1"
+	    shift
+	    ;;
+	-G|--supp-group)
+	    echo "Warning: Group parameter '$arg' is ignored in this run0 wrapper." >&2
+	    shift
+	    shift
+	    ;;
+	-s|--shell)
+	    # The next argument is the shell
+	    shift
+	    RUN0_SHELL="$1"
+	    shift
+	    ;;
+        -c|--command)
+            # The next argument is the command string
+            shift
+            if (( "$#" )); then
+		RUN0_ARGS+=("-c")
+		RUN0_ARGS+=("$1")
+                shift
+            else
+                echo "Error: -c requires a command string." >&2
+                usage
+            fi
+            ;;
+	-h|--help)
+	    show_help
+	    shift
+	    exit 0
+	    ;;
+	-V|--version)
+	    show_version
+	    shift
+	    exit 0
+	    ;;
+        -*)
+	    echo "Invalid option: $arg" >&2
+	    show_help
+	    exit 1
+            ;;
+        root)
+            TARGET_USER="--user=root"
+            shift
+            ;;
+        *)
+            # This must be the target user or the start of a command/arguments
+            if [ -z "$TARGET_USER" ]; then
+                # First positional argument is the user
+                TARGET_USER="--user=$arg"
+                shift
+            else
+		echo "Invalid option: $arg" >&2
+		show_help
+		exit 1
+            fi
+            ;;
+    esac
+done
+
+RUN0_ARGS+=("$@")
+
+if [ -z "$RUN0_SHELL" ]; then
+    RUN0_SHELL=$(get_shell "$TARGET_USER")
+fi
+
+if [ ${LOGIN_SHELL} -eq 0 ]; then
+    mapfile -t RUN0_ENV < <(printenv | grep -v ^_ | grep -v ^PATH= | awk '{print "--setenv="$0}')
+fi
+
+exec "${RUN0_EXEC}" ${RUN0_BACKGROUND} ${TARGET_CWD} ${TARGET_USER} ${TARGET_GROUP} "${RUN0_ENV[@]}" -- ${RUN0_SHELL} "${RUN0_ARGS[@]}"

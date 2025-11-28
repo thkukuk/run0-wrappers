@@ -1,0 +1,29 @@
+/* users in the run0_nopasswd list don't need to enter a password.
+ * users that are in the wheel group always authenticate with their
+ * own password. The other users need to provide the root password.
+ * This matches sudo-policy-auth-wheel-self */
+
+/* The _run0_nopasswd variable specifies the users who don't need
+ * a password to run "run0". To configure the list of users, create 
+ * a file "/etc/polkit-1/rules.d/51-run0-nopasswd.rules" with the
+ * content:
+ * polkit._run0_nopasswd.push("user1","user2",...); */
+polkit._run0_nopasswd = [];
+polkit._run0_admin_group = "wheel";
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units") {
+        for (var i in polkit._run0_nopasswd) {
+            var g = polkit._run0_nopasswd[i];
+            if (subject.user == g) {
+                return polkit.Result.YES;
+            }
+        }
+    }
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+	subject.isInGroup(polkit._run0_admin_group)) {
+        return polkit.Result.AUTH_SELF_KEEP;
+    }
+    if (action.id == "org.freedesktop.systemd1.manage-units") {
+        return polkit.Result.AUTH_ADMIN_KEEP;
+    }
+});
