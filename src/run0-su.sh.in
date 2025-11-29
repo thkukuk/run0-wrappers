@@ -52,7 +52,7 @@ RUN0_ARGS=()
 RUN0_SHELL=""
 TARGET_USER=""
 TARGET_GROUP=""
-TARGET_CWD="--chdir=$PWD"
+TARGET_CWD=""
 LOGIN_SHELL=0
 
 while (( "$#" )); do
@@ -65,42 +65,37 @@ while (( "$#" )); do
             ;;
         -|-l|--login)
 	    RUN0_ARGS+=("-l")
-	    # --login should switch to the home directory
-	    TARGET_CWD="--chdir=~"
-            shift
 	    LOGIN_SHELL=1
+	    shift
             ;;
         -m|-p|--preserve-environment)
             echo "Warning: Parameter '$arg' (preserve environment) is ignored in this run0 wrapper." >&2
             shift
             ;;
 	-g|--group)
-	    shift
-	    TARGET_GROUP="--group=$1"
-	    shift
+	    TARGET_GROUP="--group=$2"
+	    shift 2
 	    ;;
 	-G|--supp-group)
 	    echo "Warning: Group parameter '$arg' is ignored in this run0 wrapper." >&2
-	    shift
-	    shift
+	    shift 2
 	    ;;
 	-s|--shell)
 	    # The next argument is the shell
-	    shift
-	    RUN0_SHELL="$1"
-	    shift
+	    RUN0_SHELL="$2"
+	    shift 2
 	    ;;
         -c|--command)
             # The next argument is the command string
-            shift
             if (( "$#" )); then
 		RUN0_ARGS+=("-c")
-		RUN0_ARGS+=("$1")
-                shift
+		RUN0_ARGS+=("$2")
             else
                 echo "Error: -c requires a command string." >&2
-                usage
+                show_help >&2
+		exit 1
             fi
+	    shift 2
             ;;
 	-h|--help)
 	    show_help
@@ -118,18 +113,18 @@ while (( "$#" )); do
 	    exit 1
             ;;
         root)
-            TARGET_USER="--user=root"
+            TARGET_USER="root"
             shift
             ;;
         *)
             # This must be the target user or the start of a command/arguments
             if [ -z "$TARGET_USER" ]; then
                 # First positional argument is the user
-                TARGET_USER="--user=$arg"
+                TARGET_USER="$arg"
                 shift
             else
 		echo "Invalid option: $arg" >&2
-		show_help
+		show_help >&2
 		exit 1
             fi
             ;;
@@ -138,8 +133,23 @@ done
 
 RUN0_ARGS+=("$@")
 
+# we need a shell for -l and change CWD to ~
+if [ $LOGIN_SHELL -eq 1 ]; then
+    if [ -z "$TARGET_USER" ]; then
+	# run0 will change home if target user is specified
+	TARGET_USER="root"
+    fi
+else
+    # No login shell, keep current directory
+    TARGET_CWD="--chdir=$PWD"
+fi
+
 if [ -z "$RUN0_SHELL" ]; then
     RUN0_SHELL=$(get_shell "$TARGET_USER")
+fi
+
+if [ -n "$TARGET_USER" ]; then
+    TARGET_USER="--user=${TARGET_USER}"
 fi
 
 if [ ${LOGIN_SHELL} -eq 0 ]; then
