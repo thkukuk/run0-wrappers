@@ -1,2 +1,6 @@
 option('man', type : 'feature', value : 'auto',
        description : 'build and install man pages')
+option('su-symlink', type : 'boolean', value : false,
+       description : 'create su compat symlink')
+option('sudo-symlink', type : 'boolean', value : true,
+       description : 'create sudo compat symlink')

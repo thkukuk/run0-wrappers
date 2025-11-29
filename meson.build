@@ -57,7 +57,7 @@ executable('nnpenabled', 'src/nnpenabled.c',
 
 configure_file(
   input: 'src/run0-su.sh.in',
-  output: 'run0-su.sh',
+  output: 'run0-su',
   configuration: {
     'PACKAGE': meson.project_name(),
     'VERSION': meson.project_version(),
@@ -65,6 +65,27 @@ configure_file(
   install: true,
   install_dir: bindir
 )
+if get_option('su-symlink')
+  install_symlink('su',
+                  pointing_to: 'run0-su',
+                  install_dir: bindir)
+endif
+
+configure_file(
+  input: 'src/run0-sudo.sh.in',
+  output: 'run0-sudo',
+  configuration: {
+    'PACKAGE': meson.project_name(),
+    'VERSION': meson.project_version(),
+  },
+  install: true,
+  install_dir: bindir
+)
+if get_option('sudo-symlink')
+  install_symlink('sudo',
+                  pointing_to: 'run0-sudo',
+                  install_dir: bindir)
+endif
 
 install_data('profile.d/run0-wrappers.sh', install_dir : profileddir)
 

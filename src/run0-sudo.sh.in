@@ -1,0 +1,236 @@
+#!/bin/bash
+
+# This script acts as a basic sudo wrapper using run0.
+# It handles the common case of switching to root to run a command.
+
+RUN0_EXEC="run0"
+RUN0_BACKGROUND="--background="
+
+# --- Function to display usage information ---
+
+show_help() {
+    cat << 'EOF'
+run0-sudo - execute a command as another user via run0
+
+usage: run0-sudo -h | -K | -k | -V
+usage: run0-sudo -v [-g group] [-u user]
+usage: run0-sudo [-ABbEHkNnP] [-D directory] [-g group]
+            [-u user] [VAR=value] [-i | -s] [command [arg ...]]
+
+Options:
+  -D, --chdir=<directory>       Change the working directory
+  -g, --group=<group>           Run command as specified group or GID
+  -h, --help                    Display help text and exit
+  -i, --login                   Run login shell as the target user
+  -s, --shell                   Run the specified shell
+  -u, --user=user               Run command as specified user or UID
+  -V, --version                 Display version and exit
+EOF
+}
+
+show_version() {
+    run0_version="$(run0 --version 2>/dev/null | head -n 1 | cut -d' ' -f3 | sed 's/[()]//g')"
+    echo "run0-sudo (@PACKAGE@) @VERSION@"
+    echo "run0 (systemd) $run0_version"
+}
+
+# --- Get shell for the target user or current user ---
+get_shell() {
+    local targetuser=$1
+
+    if [ -n "$SHELL" ]; then
+        echo "$SHELL"
+    else
+	# otherwise, get the shell of the target user
+	local shell
+	shell=$(getent passwd "$targetuser" 2>/dev/null | cut -d: -f7)
+	echo "$shell"
+    fi
+}
+
+# --- option handling ---
+
+# Array to hold the arguments for run0
+RUN0_ARGS=("$RUN0_BACKGROUND")
+# Array to hold the final command for run0
+RUN0_COMMAND=()
+RUN0_ENV=()
+# Shell to use if one is specified
+RUN0_SHELL=""
+LOGIN_SHELL=""
+VALIDATE_ONLY=""
+PRESERVE_ENV=""
+# Variables to track user and command
+TARGET_USER=""
+TARGET_GROUP=""
+TARGET_CWD=""
+
+command_args() {
+    if [ -n "$RUN0_SHELL" ]; then
+	RUN0_COMMAND+=("$RUN0_SHELL")
+	if [ -n "$LOGIN_SHELL" ]; then
+	    RUN0_COMMAND+=("$LOGIN_SHELL")
+	fi
+	if [ $# -gt 0 ]; then
+    	    RUN0_COMMAND+=("-c" "$*")
+	fi
+    else
+	RUN0_COMMAND=("$@")
+    fi
+}
+
+parse_arguments() {
+    # Define short and long options
+    # + prefix means stop at first non-option (critical for sudo behavior)
+    local short_opts="+u:g:D:isHEnbkKPlvhVN"
+    local long_opts="user:,group:,chdir:,login,shell,set-home,preserve-env::,non-interactive,background,reset-timestamp,remove-timestamp,preserve-groups,list,validate,help,version,no-update"
+
+    # Parse arguments using getopt
+    local parsed_args
+    if ! parsed_args=$(getopt -o "$short_opts" -l "$long_opts" -n "run0-sudo" -- "$@"); then
+	show_help >&2
+	exit 1
+    fi
+
+    # Set parsed arguments
+    eval set -- "$parsed_args"
+
+    # Process parsed options
+    while true; do
+        case "$1" in
+            -D|--chdir)
+                TARGET_CWD="$2"
+                shift 2
+                ;;
+            -g|--group)
+		TARGET_GROUP="$2"
+                shift 2
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -H|--set-home)
+		# HOME is set by run0, no need to do anything
+                shift
+                ;;
+            -i|--login)
+		RUN0_SHELL=$(get_shell "$TARGET_USER")
+		LOGIN_SHELL="-l"
+		# We need to change CWD to ~
+		# run0 will do that if a target user is specified
+		if [ -z "$TARGET_USER" ]; then
+		    TARGET_USER="root"
+		fi
+		shift
+		;;
+            -l|--list)
+		echo "-l/--list is not supported" >&2
+		shift
+		;;
+            -s|--shell)
+		RUN0_SHELL=$(get_shell "$TARGET_USER")
+                shift
+                ;;
+            -u|--user)
+                TARGET_USER="$2"
+                shift 2
+                ;;
+            -E|--preserve-env)
+                if [[ "$1" == "--preserve-env" && $# -gt 1 && "$2" != "--" ]]; then
+                    # --preserve-env with a value (could be empty)
+                    if [[ -z "$2" ]]; then
+                        # Empty value - this is an error
+                        echo "run0-sudo: option '--preserve-env' requires a variable list" >&2
+                        show_help >&2
+                        exit 1
+                    fi
+		    PRESERVE_ENV="$2"
+                    shift 2
+                else
+                    # -E format (preserve all) or --preserve-env without argument
+                    PRESERVE_ENV="all"
+                    shift 1
+                fi
+                ;;
+            -n|--non-interactive)
+		RUN0_ARGS+=("--no-ask-password")
+		shift
+		;;
+            -b|--background)
+		echo "-b/--background is not supported" >&2
+		shift
+		;;
+            -k|--reset-timestamp|-K|--remove-timestamp)
+		run0 --no-ask-password false >/dev/null 2>&1
+		exit 0
+		;;
+	    -N|--no-update)
+		echo "-N/--no-update is not supported" >&2
+                shift
+                ;;
+            -P|--preserve-groups)
+    		 echo "-P|--preserve-groups is not supported" >&2
+		 shift
+		 ;;
+            -v|--validate)
+		VALIDATE_ONLY=1
+		shift
+		;;
+            -V|--version)
+                show_version
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+		echo "Invalid option: $1" >&2
+		;;
+        esac
+    done
+
+    # Show usage if no command is provided (default run0 behavior is to run a shell)
+    if [ $# -eq 0 ] && \
+       [ -z "$LOGIN_SHELL" ] && \
+       [ -z "$RUN0_SHELL" ]; then
+        show_help >&2
+        exit 1
+    fi
+
+    # Build run0 arguments and the command to execute
+    command_args "$@"
+}
+
+
+# --- Main Logic ---
+
+parse_arguments "$@"
+
+if [ -n "$TARGET_USER" ]; then
+    RUN0_ARGS+=("--user=${TARGET_USER}")
+fi
+if [ -n "$TARGET_GROUP" ]; then
+    RUN0_ARGS+=("--group=${TARGET_GROUP}")
+fi
+if [ -n "$TARGET_CWD" ]; then
+    RUN0_ARGS+=("--chdir=${TARGET_CWD}")
+fi
+
+if [ "$PRESERVE_ENV" == "all" ]; then
+    mapfile -t RUN0_ENV < <(printenv | grep -v ^LOGNAME= | grep -v ^USER= | grep -v ^_ | grep -v ^PATH= | grep -v ^HOME= | grep -v ^SUDO_ | awk '{print "--setenv="$0}')
+elif [ -n "$PRESERVE_ENV" ]; then
+    VARS=$(echo "$PRESERVE_ENV" | tr ',' ' ')
+    for var in $VARS; do
+        # Remove whitespace
+	var="${var//[[:blank:]]/}"
+	RUN0_ENV+=("--setenv=$var")
+    done
+fi
+
+if [ "$VALIDATE_ONLY" == "1" ]; then
+    exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}" "${RUN0_ENV[@]}" -- true
+else
+    exec "${RUN0_EXEC}"  "${RUN0_ARGS[@]}" "${RUN0_ENV[@]}" -- "${RUN0_COMMAND[@]}"
+fi
