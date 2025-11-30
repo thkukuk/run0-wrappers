@@ -22,6 +22,10 @@ Options:
 EOF
 }
 
+show_usage() {
+    echo "Try 'run0-su --help' for more information."
+}
+
 show_version() {
     run0_version="$(run0 --version 2>/dev/null | head -n 1 | cut -d' ' -f3 | sed 's/[()]//g')"
     echo "run0-su (@PACKAGE@) @VERSION@"
@@ -46,13 +50,13 @@ get_shell() {
 # --- Main Logic ---
 
 # Array to hold the final command and arguments for run0
-RUN0_ARGS=()
+RUN0_ARGS=("$RUN0_BACKGROUND")
+RUN0_COMMANDS=()
 
 # Variables to track user and command
 RUN0_SHELL=""
 TARGET_USER=""
 TARGET_GROUP=""
-TARGET_CWD=""
 LOGIN_SHELL=0
 
 while (( "$#" )); do
@@ -60,16 +64,16 @@ while (( "$#" )); do
 
     case "$arg" in
 	-f|--fast)
-	    RUN0_ARGS+=("-f")
+	    RUN0_COMMANDS+=("-f")
             shift
             ;;
         -|-l|--login)
-	    RUN0_ARGS+=("-l")
+	    RUN0_COMMANDS+=("-l")
 	    LOGIN_SHELL=1
 	    shift
             ;;
         -m|-p|--preserve-environment)
-            echo "Warning: Parameter '$arg' (preserve environment) is ignored in this run0 wrapper." >&2
+            echo "run0-su: preserve environment option '%arg' is ignored." >&2
             shift
             ;;
 	-g|--group)
@@ -77,7 +81,7 @@ while (( "$#" )); do
 	    shift 2
 	    ;;
 	-G|--supp-group)
-	    echo "Warning: Group parameter '$arg' is ignored in this run0 wrapper." >&2
+	    echo "run0-su: group option '$arg' is ignored." >&2
 	    shift 2
 	    ;;
 	-s|--shell)
@@ -88,11 +92,11 @@ while (( "$#" )); do
         -c|--command)
             # The next argument is the command string
             if (( "$#" )); then
-		RUN0_ARGS+=("-c")
-		RUN0_ARGS+=("$2")
+		RUN0_COMMANDS+=("-c")
+		RUN0_COMMANDS+=("$2")
             else
-                echo "Error: -c requires a command string." >&2
-                show_help >&2
+                echo "run0-su: option requires an argument -- '$arg'" >&2
+                show_usage >&2
 		exit 1
             fi
 	    shift 2
@@ -108,8 +112,8 @@ while (( "$#" )); do
 	    exit 0
 	    ;;
         -*)
-	    echo "Invalid option: $arg" >&2
-	    show_help
+	    echo "run0-su: invalid option -- '$arg'" >&2
+	    show_usage
 	    exit 1
             ;;
         root)
@@ -123,15 +127,15 @@ while (( "$#" )); do
                 TARGET_USER="$arg"
                 shift
             else
-		echo "Invalid option: $arg" >&2
-		show_help >&2
+		echo "run0-su: invalid option -- '$arg'" >&2
+		show_usage >&2
 		exit 1
             fi
             ;;
     esac
 done
 
-RUN0_ARGS+=("$@")
+RUN0_COMMANDS+=("$@")
 
 # we need a shell for -l and change CWD to ~
 if [ $LOGIN_SHELL -eq 1 ]; then
@@ -141,7 +145,7 @@ if [ $LOGIN_SHELL -eq 1 ]; then
     fi
 else
     # No login shell, keep current directory
-    TARGET_CWD="--chdir=$PWD"
+    RUN0_ARGS+=("--chdir=$PWD")
 fi
 
 if [ -z "$RUN0_SHELL" ]; then
@@ -149,11 +153,14 @@ if [ -z "$RUN0_SHELL" ]; then
 fi
 
 if [ -n "$TARGET_USER" ]; then
-    TARGET_USER="--user=${TARGET_USER}"
+    RUN0_ARGS+=("--user=${TARGET_USER}")
+fi
+if [ -n "$TARGET_GROUP" ]; then
+    RUN0_ARGS+=("--group=${TARGET_GROUP}")
 fi
 
 if [ ${LOGIN_SHELL} -eq 0 ]; then
     mapfile -t RUN0_ENV < <(printenv | grep -v ^_ | grep -v ^PATH= | awk '{print "--setenv="$0}')
 fi
 
-exec "${RUN0_EXEC}" ${RUN0_BACKGROUND} ${TARGET_CWD} ${TARGET_USER} ${TARGET_GROUP} "${RUN0_ENV[@]}" -- ${RUN0_SHELL} "${RUN0_ARGS[@]}"
+exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}" "${RUN0_ENV[@]}" -- ${RUN0_SHELL} "${RUN0_COMMANDS[@]}"
