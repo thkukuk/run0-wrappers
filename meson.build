@@ -95,7 +95,7 @@ configure_file(output: 'config.h', configuration: conf)
 subdir('polkit')
 
 # Unit tests
-#subdir('tests')
+subdir('tests')
 
 # Manual pages
 #subdir('man')

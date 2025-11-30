@@ -1,0 +1,18 @@
+test('tst_run0_sudo_1', find_program('tst-run0-sudo-1.sh'))
+test('tst_run0_sudo_2', find_program('tst-run0-sudo-2.sh'))
+test('tst_run0_sudo_3', find_program('tst-run0-sudo-3.sh'))
+test('tst_run0_sudo_4', find_program('tst-run0-sudo-4.sh'))
+test('tst_run0_sudo_5', find_program('tst-run0-sudo-5.sh'))
+test('tst_run0_sudo_6', find_program('tst-run0-sudo-6.sh'))
+test('tst_run0_sudo_7', find_program('tst-run0-sudo-7.sh'))
+test('tst_run0_sudo_8', find_program('tst-run0-sudo-8.sh'))
+test('tst_run0_sudo_9', find_program('tst-run0-sudo-9.sh'))
+test('tst_run0_su_1', find_program('tst-run0-su-1.sh'))
+test('tst_run0_su_2', find_program('tst-run0-su-2.sh'))
+test('tst_run0_su_3', find_program('tst-run0-su-3.sh'))
+test('tst_run0_su_5', find_program('tst-run0-su-5.sh'))
+test('tst_run0_su_6', find_program('tst-run0-su-6.sh'))
+
+
+
+
