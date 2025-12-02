@@ -10,15 +10,21 @@ RUN0_BACKGROUND="--background="
 
 show_help() {
     cat << 'EOF'
-run0-su - run a command with substittue user and group ID via run0
+run0-su - run a command with substitute user and group ID via run0
 
 Usage: run0-su [options] [-] [user [argument...]]"
 
 Options:
-  -c, --command <command>       Pass command to the shell with the -c option
-  -f, --fast                    Pass -f to the shell
-  -h, --help                    Display help text and exit
-  -V, --version                 Display version and exit
+  -c, --command <command>  Pass command to the shell with the -c option
+  -f, --fast               Pass -f to the shell
+  -g, --group <group>      Run with <group> as primary group
+  -l, --login, -           Start the shell as a login shell
+  -P, --pty                Create a pseudo-terminal for the session
+  -s, --shell <shell>      Run the specified <shell> instead of the default
+  -w, --whitelist-environment <list>
+                           Don’t reset specified environment variables
+  -h, --help               Display help text and exit
+  -V, --version            Display version and exit
 EOF
 }
 
@@ -63,32 +69,6 @@ while (( "$#" )); do
     arg="$1"
 
     case "$arg" in
-	-f|--fast)
-	    RUN0_COMMANDS+=("-f")
-            shift
-            ;;
-        -|-l|--login)
-	    RUN0_COMMANDS+=("-l")
-	    LOGIN_SHELL=1
-	    shift
-            ;;
-        -m|-p|--preserve-environment)
-            echo "run0-su: preserve environment option '%arg' is ignored." >&2
-            shift
-            ;;
-	-g|--group)
-	    TARGET_GROUP="--group=$2"
-	    shift 2
-	    ;;
-	-G|--supp-group)
-	    echo "run0-su: group option '$arg' is ignored." >&2
-	    shift 2
-	    ;;
-	-s|--shell)
-	    # The next argument is the shell
-	    RUN0_SHELL="$2"
-	    shift 2
-	    ;;
         -c|--command)
             # The next argument is the command string
             if (( "$#" )); then
@@ -101,6 +81,42 @@ while (( "$#" )); do
             fi
 	    shift 2
             ;;
+	-f|--fast)
+	    RUN0_COMMANDS+=("-f")
+            shift
+            ;;
+	-g|--group)
+	    TARGET_GROUP="--group=$2"
+	    shift 2
+	    ;;
+	-G|--supp-group)
+	    echo "run0-su: group option '$arg' is ignored." >&2
+	    shift 2
+	    ;;
+        -|-l|--login)
+	    RUN0_COMMANDS+=("-l")
+	    LOGIN_SHELL=1
+	    shift
+            ;;
+        -m|-p|--preserve-environment)
+            echo "run0-su: preserve environment option '%arg' is ignored." >&2
+            shift
+            ;;
+	-P |--pty)
+	    # XXX map to run0 --pty-late
+            echo "run0-su: create a pseudo-terminal option '%arg' is ignored." >&2
+            shift
+            ;;
+	-s|--shell)
+	    # The next argument is the shell
+	    RUN0_SHELL="$2"
+	    shift 2
+	    ;;
+	-w|--whitelist-environment)
+	    # XXX implement like sudo
+	    echo "run0-su: preserve environment option '%arg' is ignored." >&2
+	    shift 2
+	    ;;
 	-h|--help)
 	    show_help
 	    shift

@@ -14,17 +14,23 @@ run0-sudo - execute a command as another user via run0
 
 usage: run0-sudo -h | -K | -k | -V
 usage: run0-sudo -v [-g group] [-u user]
-usage: run0-sudo [-ABbEHkNnP] [-D directory] [-g group]
+usage: run0-sudo [-EHkNnP] [-D directory] [-g group]
             [-u user] [VAR=value] [-i | -s] [command [arg ...]]
 
 Options:
-  -D, --chdir=<directory>       Change the working directory
-  -g, --group=<group>           Run command as specified group or GID
-  -h, --help                    Display help text and exit
-  -i, --login                   Run login shell as the target user
-  -s, --shell                   Run the specified shell
-  -u, --user=user               Run command as specified user or UID
-  -V, --version                 Display version and exit
+  -D, --chdir=<directory>   Change the working directory
+  -E, --preserve-env        Preserve user environment
+      --preserve-env=<list> Preserve specific environment variables
+  -g, --group=<group>       Run command as specified group or GID
+  -H, --set-home            Set HOME variable, default with run0
+  -h, --help                Display help text and exit
+  -i, --login               Run login shell as the target user
+  -K, --remove-timestamp    Invalidate polkit keep
+  -k, --reset-timestamp     Invalidate polkit keep
+  -s, --shell               Run the specified shell
+  -u, --user=user           Run command as specified user or UID
+  -V, --version             Display version and exit
+  -v, --validate            Update timestamp without running a command
 EOF
 }
 
@@ -82,8 +88,8 @@ command_args() {
 parse_arguments() {
     # Define short and long options
     # + prefix means stop at first non-option (critical for sudo behavior)
-    local short_opts="+u:g:D:isHEnbkKPlvhVN"
-    local long_opts="user:,group:,chdir:,login,shell,set-home,preserve-env::,non-interactive,background,reset-timestamp,remove-timestamp,preserve-groups,list,validate,help,version,no-update"
+    local short_opts="+AbBC:D:Eu:g:isHnkKPlvhVN"
+    local long_opts="askpass,background,bell,close-from:,chdir:,user:,group:,login,shell,set-home,preserve-env::,non-interactive,reset-timestamp,remove-timestamp,preserve-groups,list,validate,help,version,no-update"
 
     # Parse arguments using getopt
     local parsed_args
@@ -98,42 +104,24 @@ parse_arguments() {
     # Process parsed options
     while true; do
         case "$1" in
+            -A|--askpass)
+		echo "-A/--askpass is not supported" >&2
+		shift
+		;;
+	    -b|--background)
+		echo "-b/--background is not supported" >&2
+		shift
+		;;
+	    -B|--bell)
+		echo "-B/--bell is not supported" >&2
+		shift
+		;;
+	    -C|--close-from)
+		echo "-C/--close-from <num> is not supported" >&2
+		shift 2
+		;;
             -D|--chdir)
                 TARGET_CWD="$2"
-                shift 2
-                ;;
-            -g|--group)
-		TARGET_GROUP="$2"
-                shift 2
-                ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            -H|--set-home)
-		# HOME is set by run0, no need to do anything
-                shift
-                ;;
-            -i|--login)
-		RUN0_SHELL=$(get_shell "$TARGET_USER")
-		LOGIN_SHELL="-l"
-		# We need to change CWD to ~
-		# run0 will do that if a target user is specified
-		if [ -z "$TARGET_USER" ]; then
-		    TARGET_USER="root"
-		fi
-		shift
-		;;
-            -l|--list)
-		echo "-l/--list is not supported" >&2
-		shift
-		;;
-            -s|--shell)
-		RUN0_SHELL=$(get_shell "$TARGET_USER")
-                shift
-                ;;
-            -u|--user)
-                TARGET_USER="$2"
                 shift 2
                 ;;
             -E|--preserve-env)
@@ -153,26 +141,56 @@ parse_arguments() {
                     shift 1
                 fi
                 ;;
-            -n|--non-interactive)
-		RUN0_ARGS+=("--no-ask-password")
-		shift
-		;;
-            -b|--background)
-		echo "-b/--background is not supported" >&2
+            -g|--group)
+		TARGET_GROUP="$2"
+                shift 2
+                ;;
+            -H|--set-home)
+		# HOME is set by run0, no need to do anything
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -i|--login)
+		RUN0_SHELL=$(get_shell "$TARGET_USER")
+		LOGIN_SHELL="-l"
+		# We need to change CWD to ~
+		# run0 will do that if a target user is specified
+		if [ -z "$TARGET_USER" ]; then
+		    TARGET_USER="root"
+		fi
 		shift
 		;;
             -k|--reset-timestamp|-K|--remove-timestamp)
 		run0 --no-ask-password false >/dev/null 2>&1
 		exit 0
 		;;
+            -l|--list)
+		echo "-l/--list is not supported" >&2
+		shift
+		;;
 	    -N|--no-update)
 		echo "-N/--no-update is not supported" >&2
                 shift
                 ;;
+            -n|--non-interactive)
+		RUN0_ARGS+=("--no-ask-password")
+		shift
+		;;
             -P|--preserve-groups)
     		 echo "-P|--preserve-groups is not supported" >&2
 		 shift
 		 ;;
+            -s|--shell)
+		RUN0_SHELL=$(get_shell "$TARGET_USER")
+                shift
+                ;;
+            -u|--user)
+                TARGET_USER="$2"
+                shift 2
+                ;;
             -v|--validate)
 		VALIDATE_ONLY=1
 		shift
