@@ -1,7 +1,7 @@
 # run0-wrappers
 
 This package provides a polkit rule to simulate sudo behavior
-for run0 and wrapper for su and sudo.
+for run0 and wrappers for pkexec, su and sudo.
 
 With the polkit rules:
 1. Users in the \_run0\_nopasswd list don't need to enter a password.
@@ -19,4 +19,3 @@ following example content:
 ``` 
 polkit._run0_nopasswd.push("user1","user2",...);
 ```
-

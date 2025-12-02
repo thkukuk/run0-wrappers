@@ -12,7 +12,6 @@ test('tst_run0_su_2', find_program('tst-run0-su-2.sh'))
 test('tst_run0_su_3', find_program('tst-run0-su-3.sh'))
 test('tst_run0_su_5', find_program('tst-run0-su-5.sh'))
 test('tst_run0_su_6', find_program('tst-run0-su-6.sh'))
-
-
-
-
+test('tst_run0_pkexec_1', find_program('tst-run0-pkexec-1.sh'))
+test('tst_run0_pkexec_2', find_program('tst-run0-pkexec-2.sh'))
+test('tst_run0_pkexec_3', find_program('tst-run0-pkexec-3.sh'))

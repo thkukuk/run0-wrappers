@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# This script acts as a basic su wrapper using run0.
+# It handles the common case of switching to root to run a command.
+
+RUN0_EXEC="run0"
+RUN0_BACKGROUND="--background="
+
+# --- Function to display usage information ---
+
+show_help() {
+    cat << 'EOF'
+run0-pkexec - run a command with substittue user ID via run0
+
+Usage: run0-pkexec [options] <program> [arguments...]
+
+Options:
+  --keep-cwd       Stay in current directory
+  --user <user>    Switches to the specified user instead of root
+  --help           Display help text and exit
+  --version        Display version and exit
+EOF
+}
+
+show_usage() {
+    echo "Try 'run0-pkexec --help' for more information."
+}
+
+show_version() {
+    run0_version="$(run0 --version 2>/dev/null | head -n 1 | cut -d' ' -f3 | sed 's/[()]//g')"
+    echo "run0-pkexec (@PACKAGE@) @VERSION@"
+    echo "systemd run0 version $run0_version"
+}
+
+# --- Main Logic ---
+
+# Array to hold the final command and arguments for run0
+RUN0_ARGS=("$RUN0_BACKGROUND")
+RUN0_COMMANDS=()
+TARGET_USER="root"
+
+while (( "$#" )); do
+    arg="$1"
+
+    case "$arg" in
+	--disable-internal-agent)
+	    # ignore
+	    shift
+	    ;;
+	--keep-cwd)
+	    RUN0_ARGS+=("--chdir=$PWD")
+            shift
+            ;;
+	--user)
+	    TARGET_USER="$2"
+	    shift 2
+	    ;;
+	--help)
+	    show_help
+	    shift
+	    exit 0
+	    ;;
+	--version)
+	    show_version
+	    shift
+	    exit 0
+	    ;;
+	--)
+	    # stop parsing
+	    shift
+	    break
+	    ;;
+        -*)
+	    echo "run0-pkexec: invalid option -- '$arg'" >&2
+	    show_usage
+	    exit 1
+            ;;
+        *)
+	    # first non option argument is the first command
+	    break
+            ;;
+    esac
+done
+
+RUN0_ARGS+=("--user=${TARGET_USER}")
+RUN0_COMMANDS+=("$@")
+
+exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}"  -- "${RUN0_COMMANDS[@]}"

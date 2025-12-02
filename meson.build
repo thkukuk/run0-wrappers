@@ -87,6 +87,22 @@ if get_option('sudo-symlink')
                   install_dir: bindir)
 endif
 
+configure_file(
+  input: 'src/run0-pkexec.sh.in',
+  output: 'run0-pkexec',
+  configuration: {
+    'PACKAGE': meson.project_name(),
+    'VERSION': meson.project_version(),
+  },
+  install: true,
+  install_dir: bindir
+)
+if get_option('pkexec-symlink')
+  install_symlink('pkexec',
+                  pointing_to: 'run0-pkexec',
+                  install_dir: bindir)
+endif
+
 install_data('profile.d/run0-wrappers.sh', install_dir : profileddir)
 
 configure_file(output: 'config.h', configuration: conf)
