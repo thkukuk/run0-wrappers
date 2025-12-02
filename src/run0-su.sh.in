@@ -52,12 +52,12 @@ get_shell() {
     fi
 }
 
-
 # --- Main Logic ---
 
 # Array to hold the final command and arguments for run0
 RUN0_ARGS=("$RUN0_BACKGROUND")
 RUN0_COMMANDS=()
+RUN0_ENV=()
 
 # Variables to track user and command
 RUN0_SHELL=""
@@ -103,8 +103,7 @@ while (( "$#" )); do
             shift
             ;;
 	-P |--pty)
-	    # XXX map to run0 --pty-late
-            echo "run0-su: create a pseudo-terminal option '%arg' is ignored." >&2
+	    RUN0_ARGS+=("--pty-late")
             shift
             ;;
 	-s|--shell)
@@ -113,8 +112,12 @@ while (( "$#" )); do
 	    shift 2
 	    ;;
 	-w|--whitelist-environment)
-	    # XXX implement like sudo
-	    echo "run0-su: preserve environment option '%arg' is ignored." >&2
+	    VARS=$(echo "$2" | tr ',' ' ')
+	    for var in $VARS; do
+		# Remove whitespace
+		var="${var//[[:blank:]]/}"
+		RUN0_ENV+=("--setenv=$var")
+	    done
 	    shift 2
 	    ;;
 	-h|--help)
