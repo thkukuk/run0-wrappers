@@ -114,4 +114,4 @@ subdir('polkit')
 subdir('tests')
 
 # Manual pages
-#subdir('man')
+subdir('man')

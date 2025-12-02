@@ -1,0 +1,135 @@
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="run0-su">
+  <refmeta>
+    <refentrytitle>run0-su</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="source">run0-wrappers %version%</refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>run0-su</refname>
+    <refpurpose>run a command with substitute user and group ID via run0</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>run0-su</command>
+      <arg choice="opt" rep="repeat"><replaceable>options</replaceable></arg>
+      <arg choice="opt">-</arg>
+      <arg choice="opt">
+        <replaceable>user</replaceable>
+        <arg choice="opt" rep="repeat"><replaceable>argument</replaceable></arg>
+      </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1 xml:id="description">
+    <title>Description</title>
+    <para>
+      <command>run0-su</command> is a wrapper around
+      <citerefentry>
+        <refentrytitle>run0</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>. It tries to emulate the
+      <citerefentry>
+        <refentrytitle>su</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry> behavior as good as possible.
+    </para>
+  </refsect1>
+
+  <refsect1 xml:id="options">
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>-c</option></term>
+        <term><option>--command</option> <replaceable>command</replaceable></term>
+        <listitem>
+          <para>Pass <replaceable>command</replaceable> to the shell with the <option>-c</option> option.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option></term>
+        <term><option>--fast</option></term>
+        <listitem>
+          <para>Pass <option>-f</option> to the shell.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g</option></term>
+        <term><option>--group</option> <replaceable>group</replaceable></term>
+        <listitem>
+          <para>Run with <replaceable>group</replaceable> as primary group.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-l</option></term>
+        <term><option>--login</option></term>
+        <term><option>-</option></term>
+        <listitem>
+          <para>Start the shell as a login shell.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-P</option></term>
+        <term><option>--pty</option></term>
+        <listitem>
+          <para>Create a pseudo-terminal for the session.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-s</option></term>
+        <term><option>--shell</option> <replaceable>shell</replaceable></term>
+        <listitem>
+          <para>Run the specified <replaceable>shell</replaceable> instead of the default.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-w</option></term>
+        <term><option>--whitelist-environment</option> <replaceable>list</replaceable></term>
+        <listitem>
+          <para>Don't reset specified environment variables.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>Display help text and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-V</option></term>
+        <term><option>--version</option></term>
+        <listitem>
+          <para>Display version and exit.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>run0</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>su</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>run0-pkexec</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>run0-sudo</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+    </para>
+  </refsect1>
+
+</refentry>

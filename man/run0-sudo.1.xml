@@ -1,0 +1,188 @@
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="run0-su">
+  <refmeta>
+    <refentrytitle>run0-sudo</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="source">run0-wrappers %version%</refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>run0-sudo</refname>
+    <refpurpose>execute a command as another user via run0</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>run0-sudo</command>
+      <group choice="req">
+        <arg choice="plain"><option>-h</option></arg>
+        <arg choice="plain"><option>-K</option></arg>
+        <arg choice="plain"><option>-k</option></arg>
+        <arg choice="plain"><option>-V</option></arg>
+      </group>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>run0-sudo</command>
+      <arg choice="plain"><option>-v</option></arg>
+      <arg choice="opt"><option>-g</option> <replaceable>group</replaceable></arg>
+      <arg choice="opt"><option>-u</option> <replaceable>user</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>run0-sudo</command>
+      <arg choice="opt">
+        <option>-E</option>
+        <option>-H</option>
+        <option>-k</option>
+        <option>-N</option>
+        <option>-n</option>
+        <option>-P</option>
+      </arg>
+      <arg choice="opt"><option>-D</option> <replaceable>directory</replaceable></arg>
+      <arg choice="opt"><option>-g</option> <replaceable>group</replaceable></arg>
+      <arg choice="opt"><option>-u</option> <replaceable>user</replaceable></arg>
+      <arg choice="opt" rep="repeat"><replaceable>VAR=value</replaceable></arg>
+      <group choice="opt">
+         <arg choice="plain"><option>-i</option></arg>
+         <arg choice="plain"><option>-s</option></arg>
+      </group>
+      <arg choice="opt">
+        <replaceable>command</replaceable>
+        <arg choice="opt" rep="repeat"><replaceable>arg</replaceable></arg>
+      </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1 xml:id="description">
+    <title>Description</title>
+    <para>
+      <command>run0-sudo</command> is a wrapper around
+      <citerefentry>
+        <refentrytitle>run0</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>. It tries to emulate the 
+      <citerefentry>
+        <refentrytitle>sudo</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry> behavior as good as possible.
+    </para>
+  </refsect1>
+
+  <refsect1 xml:id="options">
+    <title>Options</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>-D</option></term>
+        <term><option>--chdir</option>=<replaceable>directory</replaceable></term>
+        <listitem>
+          <para>Change the working directory.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+        <term><option>-E</option></term>
+        <term><option>--preserve-env</option></term>
+        <term><option>--preserve-env</option>=<replaceable>list</replaceable></term>
+        <listitem>
+          <para>Preserve user environment or preserve specific environment variables if a list is provided.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g</option></term>
+        <term><option>--group</option>=<replaceable>group</replaceable></term>
+        <listitem>
+          <para>Run command as specified group or GID.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-H</option></term>
+        <term><option>--set-home</option></term>
+        <listitem>
+          <para>Set HOME variable, default with run0.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>Display help text and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-i</option></term>
+        <term><option>--login</option></term>
+        <listitem>
+          <para>Run login shell as the target user.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-K</option></term>
+        <term><option>--remove-timestamp</option></term>
+        <listitem>
+          <para>Invalidate polkit keep.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-k</option></term>
+        <term><option>--reset-timestamp</option></term>
+        <listitem>
+          <para>Invalidate polkit keep.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-s</option></term>
+        <term><option>--shell</option></term>
+        <listitem>
+          <para>Run the specified shell.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-u</option></term>
+        <term><option>--user</option>=<replaceable>user</replaceable></term>
+        <listitem>
+          <para>Run command as specified user or UID.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-V</option></term>
+        <term><option>--version</option></term>
+        <listitem>
+          <para>Display version and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-v</option></term>
+        <term><option>--validate</option></term>
+        <listitem>
+          <para>Update timestamp without running a command.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>run0</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>sudo</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>run0-pkexec</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>run0-su</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+    </para>
+  </refsect1>
+
+</refentry>
