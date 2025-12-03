@@ -65,7 +65,7 @@ configure_file(
   install: true,
   install_dir: bindir
 )
-if get_option('su-symlink')
+if get_option('su-compat')
   install_symlink('su',
                   pointing_to: 'run0-su',
                   install_dir: bindir)
@@ -81,7 +81,7 @@ configure_file(
   install: true,
   install_dir: bindir
 )
-if get_option('sudo-symlink')
+if get_option('sudo-compat')
   install_symlink('sudo',
                   pointing_to: 'run0-sudo',
                   install_dir: bindir)
@@ -97,7 +97,7 @@ configure_file(
   install: true,
   install_dir: bindir
 )
-if get_option('pkexec-symlink')
+if get_option('pkexec-compat')
   install_symlink('pkexec',
                   pointing_to: 'run0-pkexec',
                   install_dir: bindir)

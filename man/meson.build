@@ -20,16 +20,25 @@ custom_target('run0-pkexec.1',
               command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
               install : want_man,
               install_dir : mandir1)
+if get_option('pkexec-compat')
+  install_data('pkexec.1', install_dir : mandir1)
+endif
 custom_target('run0-su.1',
               input : 'run0-su.1.xml',
               output : 'run0-su.1',
               command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
               install : want_man,
               install_dir : mandir1)
+if get_option('su-compat')
+  install_data('su.1', install_dir : mandir1)
+endif
 custom_target('run0-sudo.1',
               input : 'run0-sudo.1.xml',
               output : 'run0-sudo.1',
               command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
               install : want_man,
               install_dir : mandir1)
+if get_option('sudo-compat')
+  install_data('sudo.1', install_dir : mandir1)
+endif
 endif

@@ -10,7 +10,7 @@ With the polkit rules:
 3. The remaining users need to provide the root password.
 
 This matches sudo-policy-auth-wheel-self configuration on openSUSE
-and SLES 16.
+Tumbleweed, MicroOS and SLES 16.
 
 To specify a list of users who don't need a password, create
 a file `/etc/polkit-1/rules.d/51-run0-nopasswd.rules` with the
