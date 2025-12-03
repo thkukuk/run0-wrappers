@@ -4,6 +4,9 @@ Copyright (C) 2025 Thorsten Kukuk <kukuk@suse.com>.
 
 Please enter bug reports at https://github.com/thkukuk/run0-wrappers/issues
 
+Version 0.3.0
+* Add compat man pages as pkexec.1, su.1 and sudo.1
+
 Version 0.2.0
 * First feature complete version
 
