@@ -9,6 +9,13 @@
  * content:
  * polkit._run0_nopasswd.push("user1","user2",...); */
 polkit._run0_nopasswd = [];
+
+/* The variable _run0_admin_group specifies the admin group in which
+ * users must authenticate with their own password, while the others
+ * must specify the root password. To change the group, create a file
+ * "/etc/polkit-1/rules.d/51-run0-admin-group.rules" with e.g. the
+ * following content:
+ * polkit._run0_admin_group = "admin"; */
 polkit._run0_admin_group = "wheel";
 polkit.addRule(function(action, subject) {
     if (action.id == "org.freedesktop.systemd1.manage-units") {
