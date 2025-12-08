@@ -111,6 +111,10 @@ while (( "$#" )); do
 	    RUN0_SHELL="$2"
 	    shift 2
 	    ;;
+	--shell=*)
+	    RUN0_SHELL="${1#*=}"
+            shift
+            ;;
 	-w|--whitelist-environment)
 	    VARS=$(echo "$2" | tr ',' ' ')
 	    for var in $VARS; do
