@@ -12,7 +12,7 @@ show_help() {
     cat << 'EOF'
 run0-su - run a command with substitute user and group ID via run0
 
-Usage: run0-su [options] [-] [user [argument...]]"
+Usage: run0-su [options] [-] [user [argument...]]
 
 Options:
   -c, --command <command>  Pass command to the shell with the -c option
