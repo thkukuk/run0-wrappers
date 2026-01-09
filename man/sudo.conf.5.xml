@@ -1,0 +1,63 @@
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="sudo.conf">
+  <refmeta>
+    <refentrytitle>sudo.conf</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class="source">run0-wrappers %version%</refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>sudo.conf</refname>
+    <refpurpose>configuration file for run0-sudo</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <para><filename>/etc/run0-wrappers/sudo.conf</filename></para>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para>This configuration file is for changing default values of
+    <citerefentry><refentrytitle>run0-sudo</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+
+    <para>The following options are available:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><varname>secure_path</varname>=<replaceable>dir1</replaceable>:<replaceable>dir2</replaceable>:<replaceable>...</replaceable></term>
+        <listitem>
+	  <para>
+	    The value of this variable will be used as <literal>PATH</literal>
+	    environment variable.
+          </para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><varname>RUN0_BACKGROUND</varname>=<replaceable>option</replaceable></term>
+        <listitem>
+	  <para>
+	    This variable will be used to set the background color of
+	    a terminal with
+	    <citerefentry><refentrytitle>run0</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+	    An example for a blue background would be <literal>RUN0_BACKGROUND="--background=44"</literal>
+          </para>
+	</listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='see_also'>
+    <title>See Also</title>
+    <para>
+      <citerefentry><refentrytitle>run0-sudo</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+
+</refentry>

@@ -12,6 +12,7 @@ custom_man_xsl = files('custom-man.xsl')
 xslt_cmd = [xsltproc_exe, '-o', '@OUTPUT0@'] + xsltproc_flags
 
 mandir1 = get_option('mandir') / 'man1'
+mandir5 = get_option('mandir') / 'man5'
 
 if xsltproc_exe.found()
 custom_target('run0-pkexec.1',
@@ -38,6 +39,12 @@ custom_target('run0-sudo.1',
               command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
               install : want_man,
               install_dir : mandir1)
+custom_target('sudo.conf.5',
+              input : 'sudo.conf.5.xml',
+              output : 'sudo.conf.5',
+              command : xslt_cmd + [custom_man_xsl, '@INPUT@'],
+              install : want_man,
+              install_dir : mandir5)
 if get_option('sudo-compat')
   install_data('sudo.1', install_dir : mandir1)
 endif

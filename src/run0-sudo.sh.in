@@ -3,8 +3,14 @@
 # This script acts as a basic sudo wrapper using run0.
 # It handles the common case of switching to root to run a command.
 
+CONFIG_FILE="/etc/run0-wrappers/sudo.conf"
 RUN0_EXEC="run0"
 RUN0_BACKGROUND="--background="
+secure_path="/usr/sbin:/usr/bin:/sbin:/bin"
+
+if [ -f "${CONFIG_FILE}" ]; then
+    . "${CONFIG_FILE}"
+fi
 
 # --- Function to display usage information ---
 
@@ -246,6 +252,8 @@ elif [ -n "$PRESERVE_ENV" ]; then
 	RUN0_ENV+=("--setenv=$var")
     done
 fi
+
+export PATH="${secure_path}"
 
 if [ "$VALIDATE_ONLY" == "1" ]; then
     exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}" "${RUN0_ENV[@]}" -- true
