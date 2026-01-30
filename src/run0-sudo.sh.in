@@ -254,6 +254,7 @@ elif [ -n "$PRESERVE_ENV" ]; then
 fi
 
 export PATH="${secure_path}"
+unset secure_path
 
 if [ "$VALIDATE_ONLY" == "1" ]; then
     exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}" "${RUN0_ENV[@]}" -- true
