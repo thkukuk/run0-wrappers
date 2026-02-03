@@ -1,3 +1,21 @@
+shellcheck_exe = find_program('shellcheck', required : false)
+
+if shellcheck_exe.found()
+test('shellcheck-run0-pkexec',
+  shellcheck_exe,
+  args: [files('../src/run0-pkexec.sh.in')]
+)
+test('shellcheck-run0-su',
+  shellcheck_exe,
+  args: [files('../src/run0-su.sh.in')]
+)
+test('shellcheck-run0-sudo',
+  shellcheck_exe,
+  args: [files('../src/run0-sudo.sh.in')]
+)
+endif
+
+
 test('tst_run0_sudo_1', find_program('tst-run0-sudo-1.sh'))
 test('tst_run0_sudo_2', find_program('tst-run0-sudo-2.sh'))
 test('tst_run0_sudo_3', find_program('tst-run0-sudo-3.sh'))
