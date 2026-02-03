@@ -3,7 +3,7 @@
 # This script acts as a basic su wrapper using run0.
 # It handles the common case of switching to root to run a command.
 
-RUN0_EXEC="run0"
+_run0_exec="run0"
 RUN0_BACKGROUND="--background="
 
 # --- Function to display usage information ---
@@ -35,9 +35,9 @@ show_version() {
 # --- Main Logic ---
 
 # Array to hold the final command and arguments for run0
-RUN0_ARGS=("$RUN0_BACKGROUND")
-RUN0_COMMANDS=()
-TARGET_USER="root"
+__run0_args=("$RUN0_BACKGROUND")
+__run0_commands=()
+__run0_target_user="root"
 
 while (( "$#" )); do
     arg="$1"
@@ -48,11 +48,11 @@ while (( "$#" )); do
 	    shift
 	    ;;
 	--keep-cwd)
-	    RUN0_ARGS+=("--chdir=$PWD")
+	    __run0_args+=("--chdir=$PWD")
             shift
             ;;
 	--user)
-	    TARGET_USER="$2"
+	    __run0_target_user="$2"
 	    shift 2
 	    ;;
 	--help)
@@ -82,7 +82,7 @@ while (( "$#" )); do
     esac
 done
 
-RUN0_ARGS+=("--user=${TARGET_USER}")
-RUN0_COMMANDS+=("$@")
+__run0_args+=("--user=${__run0_target_user}")
+__run0_commands+=("$@")
 
-exec "${RUN0_EXEC}" "${RUN0_ARGS[@]}"  -- "${RUN0_COMMANDS[@]}"
+exec "${_run0_exec}" "${__run0_args[@]}"  -- "${__run0_commands[@]}"
