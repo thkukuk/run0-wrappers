@@ -1,8 +1,12 @@
 run0-wrappers NEWS -- history of user-visible changes.
 
-Copyright (C) 2025 Thorsten Kukuk <kukuk@suse.com>.
+Copyright (C) 2025, 2026 Thorsten Kukuk <kukuk@suse.com>.
 
 Please enter bug reports at https://github.com/thkukuk/run0-wrappers/issues
+
+Version 0.5.0
+* run0-sudo: fixes -k/-K
+* Many fixes around environment variable handling
 
 Version 0.4.0
 * Fixes for run0-su in help text and --shell handling
