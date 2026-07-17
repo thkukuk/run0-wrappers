@@ -32,8 +32,9 @@ Options:
   -H, --set-home            Set HOME variable, default with run0
   -h, --help                Display help text and exit
   -i, --login               Run login shell as the target user
-  -K, --remove-timestamp    Invalidate polkit keep
-  -k, --reset-timestamp     Invalidate polkit keep
+  -K, --remove-timestamp    Revoke all cached polkit credentials for the user
+  -k, --reset-timestamp     Revoke cached polkit credentials for the current session;
+                            when used with a command, forces re-authentication
   -s, --shell               Run the specified shell
   -u, --user=user           Run command as specified user or UID
   -V, --version             Display version and exit
@@ -45,6 +46,37 @@ show_version() {
     run0_version="$(run0 --version 2>/dev/null | head -n 1 | cut -d' ' -f3 | sed 's/[()]//g')"
     echo "run0-sudo (@PACKAGE@) @VERSION@"
     echo "run0 (systemd) $run0_version"
+}
+
+# --- Revoke polkit temporary authorizations ---
+
+revoke_session_credentials() {
+    local session_id="${XDG_SESSION_ID:-}"
+    if [ -z "$session_id" ]; then
+        return 0
+    fi
+    busctl call org.freedesktop.PolicyKit1 \
+        /org/freedesktop/PolicyKit1/Authority \
+        org.freedesktop.PolicyKit1.Authority \
+        RevokeTemporaryAuthorizations "(sa{sv})" \
+        "unix-session" 1 "session-id" s "$session_id" 2>/dev/null || true
+}
+
+revoke_all_credentials() {
+    local current_user
+    current_user=$(id -un)
+    local found=0
+    while read -r session_id _; do
+        found=1
+        busctl call org.freedesktop.PolicyKit1 \
+            /org/freedesktop/PolicyKit1/Authority \
+            org.freedesktop.PolicyKit1.Authority \
+            RevokeTemporaryAuthorizations "(sa{sv})" \
+            "unix-session" 1 "session-id" s "$session_id" 2>/dev/null || true
+    done < <(loginctl list-sessions --no-legend 2>/dev/null | awk -v user="$current_user" '$3 == user {print $1}')
+    if [ "$found" -eq 0 ]; then
+        revoke_session_credentials
+    fi
 }
 
 # --- Get shell for the target user or current user ---
@@ -73,6 +105,8 @@ __run0_shell=""
 __run0_login_shell=""
 __run0_validate_only=""
 __run0_preserve_env=""
+__run0_reset_timestamp=""
+__run0_remove_timestamp=""
 # Variables to track user and command
 __run0_target_user=""
 __run0_target_group=""
@@ -170,9 +204,13 @@ parse_arguments() {
 		fi
 		shift
 		;;
-            -k|--reset-timestamp|-K|--remove-timestamp)
-		run0 --no-ask-password false >/dev/null 2>&1
-		exit 0
+            -k|--reset-timestamp)
+		__run0_reset_timestamp=1
+		shift
+		;;
+            -K|--remove-timestamp)
+		__run0_remove_timestamp=1
+		shift
 		;;
             -l|--list)
 		echo "-l/--list is not supported" >&2
@@ -219,7 +257,10 @@ parse_arguments() {
     # Show usage if no command is provided (default run0 behavior is to run a shell)
     if [ $# -eq 0 ] && \
        [ -z "$__run0_login_shell" ] && \
-       [ -z "$__run0_shell" ]; then
+       [ -z "$__run0_shell" ] && \
+       [ -z "$__run0_validate_only" ] && \
+       [ -z "$__run0_reset_timestamp" ] && \
+       [ -z "$__run0_remove_timestamp" ]; then
         show_help >&2
         exit 1
     fi
@@ -232,6 +273,29 @@ parse_arguments() {
 # --- Main Logic ---
 
 parse_arguments "$@"
+
+# -K must not be combined with a command or other meaningful options
+if [ -n "$__run0_remove_timestamp" ] && [ ${#__run0_command[@]} -gt 0 ]; then
+    echo "run0-sudo: -K cannot be used with a command" >&2
+    exit 1
+fi
+
+# Handle credential revocation
+if [ -n "$__run0_remove_timestamp" ]; then
+    revoke_all_credentials
+    exit 0
+fi
+
+if [ -n "$__run0_reset_timestamp" ] && [ ${#__run0_command[@]} -eq 0 ] && \
+   [ -z "$__run0_login_shell" ] && [ -z "$__run0_shell" ]; then
+    revoke_session_credentials
+    exit 0
+fi
+
+# -k combined with a command: revoke credentials first so polkit re-authenticates
+if [ -n "$__run0_reset_timestamp" ]; then
+    revoke_session_credentials
+fi
 
 if [ -n "$__run0_target_user" ]; then
     __run0_args+=("--user=${__run0_target_user}")
