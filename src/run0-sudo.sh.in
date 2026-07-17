@@ -308,7 +308,14 @@ if [ -n "$__run0_target_cwd" ]; then
 fi
 
 if [ "$__run0_preserve_env" == "all" ]; then
-    mapfile -t __run0_env < <(printenv | grep -v ^LOGNAME= | grep -v ^USER= | grep -v ^_ | grep -v ^PATH= | grep -v ^HOME= | grep -v ^SUDO_ | awk '{print "--setenv="$0}')
+    while IFS= read -r -d '' __entry; do
+        __varname="${__entry%%=*}"
+        case "$__varname" in
+            LOGNAME|USER|PATH|HOME) continue ;;
+            _*|SUDO_*) continue ;;
+        esac
+        __run0_env+=("--setenv=${__entry}")
+    done < <(printenv -0)
 elif [ -n "$__run0_preserve_env" ]; then
     __vars=$(echo "$__run0_preserve_env" | tr ',' ' ')
     for var in $__vars; do

@@ -184,7 +184,14 @@ if [ -n "$__target_group" ]; then
 fi
 
 if [ ${__login_shell} -eq 0 ]; then
-    mapfile -t __run0_env < <(printenv | grep -v ^_ | grep -v ^PATH= | awk '{print "--setenv="$0}')
+    while IFS= read -r -d '' __entry; do
+        __varname="${__entry%%=*}"
+        case "$__varname" in
+            PATH) continue ;;
+            _*) continue ;;
+        esac
+        __run0_env+=("--setenv=${__entry}")
+    done < <(printenv -0)
 fi
 
 # shellcheck disable=SC2086
