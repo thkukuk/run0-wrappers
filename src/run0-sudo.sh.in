@@ -265,6 +265,24 @@ parse_arguments() {
         exit 1
     fi
 
+    # Parse VAR=value assignments before the command (like sudo supports)
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            *=*)
+                __varname="${1%%=*}"
+                if [[ "$__varname" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+                    __run0_env+=("--setenv=$1")
+                    shift
+                else
+                    break
+                fi
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
     # Build run0 arguments and the command to execute
     command_args "$@"
 }
