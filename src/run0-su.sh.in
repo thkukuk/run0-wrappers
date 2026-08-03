@@ -100,7 +100,7 @@ while (( "$#" )); do
 	    shift
             ;;
         -m|-p|--preserve-environment)
-            echo "run0-su: preserve environment option '%arg' is ignored." >&2
+            echo "run0-su: preserve environment option '$arg' is ignored." >&2
             shift
             ;;
 	-P |--pty)
