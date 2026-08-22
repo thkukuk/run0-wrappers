@@ -332,6 +332,11 @@ if [ "$__run0_preserve_env" == "all" ]; then
             LOGNAME|USER|PATH|HOME) continue ;;
             _*|SUDO_*) continue ;;
         esac
+        # Skip bash-exported shell functions (e.g. "BASH_FUNC_mc%%") and any
+        # other name that isn't a valid environment variable identifier;
+        if [[ ! "$__varname" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            continue
+        fi
         __run0_env+=("--setenv=${__entry}")
     done < <(printenv -0)
 elif [ -n "$__run0_preserve_env" ]; then
